@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  # Banco Conta Corrente
+  mysql-contacorrente:
+    image: mysql:8.0
+    container_name: mysql-contacorrente
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: contacorrente
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./BankMore.ContaCorrente/src/BankMore.ContaCorrente.Api/contacorrente.sql:/docker-entrypoint-initdb.d/contacorrente.sql
+
+  # Banco Transferencia
+  mysql-transferencia:
+    image: mysql:8.0
+    container_name: mysql-transferencia
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: transferencia
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./BankMore.Transferencia/src/BankMore.Transferencia.Api/transferencia.sql:/docker-entrypoint-initdb.d/transferencia.sql
+
+  # API Conta Corrente
+  contacorrente-api:
+    build:
+      context: ./BankMore.ContaCorrente
+      dockerfile: Dockerfile
+    container_name: contacorrente-api
+    ports:
+      - "5001:8080"
+    depends_on:
+      - mysql-contacorrente
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./BankMore.ContaCorrente/src/BankMore.ContaCorrente.Api/secrets.json:/app/secrets.json
+
+
+  # API Transferencia
+  transferencia-api:
+    build:
+      context: ./BankMore.Transferencia
+      dockerfile: Dockerfile
+    container_name: transferencia-api
+    ports:
+      - "5002:8081"
+    depends_on:
+      - mysql-transferencia
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./BankMore.Transferencia/src/BankMore.Transferencia.Api/secrets.json:/app/secrets.json
